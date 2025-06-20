@@ -1,1 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Wind Ring Calculator v3</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { font-family: sans-serif; padding: 20px; max-width: 480px; margin: auto; }
+        input, select { width: 100%; padding: 10px; margin: 8px 0; }
+        button { padding: 10px; width: 100%; background: #007BFF; color: white; border: none; font-size: 16px; }
+        #resultBox {
+            font-size: 22px;
+            font-weight: bold;
+            color: #2b2b2b;
+            background: #e6f7ff;
+            padding: 15px;
+            margin-top: 20px;
+            border: 2px solid #007BFF;
+            border-radius: 8px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h2>Wind Ring Adjustment Calculator</h2>
 
+    <label for="club">Select Club:</label>
+    <select id="club">
+        <option value="Driver">Driver</option>
+        <option value="Wood">Wood</option>
+        <option value="Long Iron">Long Iron</option>
+        <option value="Short Iron">Short Iron</option>
+        <option value="Wedge">Wedge</option>
+    </select>
+
+    <label for="accuracy">Club Accuracy (10–100):</label>
+    <input type="number" id="accuracy" min="10" max="100" value="56">
+
+    <label for="wind">Wind Speed (mph):</label>
+    <input type="number" id="wind" step="0.1" min="0.1" value="2.5">
+
+    <label for="yardage">Shot Yardage:</label>
+    <input type="number" id="yardage" step="0.1" min="0" value="150">
+
+    <label for="elevation">Elevation Adjustment (%):</label>
+    <input type="number" id="elevation" step="1" value="0">
+
+    <button onclick="calculate()">Calculate</button>
+
+    <div id="resultBox">Ring Adjustment: —</div>
+
+    <script>
+        const clubMaxYardage = {
+            "Driver": 246.1,
+            "Wood": 203.6,
+            "Long Iron": 166.92,
+            "Short Iron": 138.03,
+            "Wedge": 83
+        };
+
+        function windMultiplier(wind) {
+            if (wind < 3.0) {
+                return 1 + 0.05 * Math.pow(wind - 1, 1.2);
+            } else {
+                return ((1 + 0.09 * Math.pow(wind - 2.5, 1.9) + 0.12) * 1.05 * 0.82 * 0.85);
+            }
+        }
+
+        function calculate() {
+            let club = document.getElementById("club").value;
+            let acc = parseFloat(document.getElementById("accuracy").value);
+            let wind = parseFloat(document.getElementById("wind").value);
+            let yardage = parseFloat(document.getElementById("yardage").value);
+            let elevation = parseFloat(document.getElementById("elevation").value);
+
+            if (isNaN(acc) || isNaN(wind) || isNaN(yardage) || isNaN(elevation)) {
+                document.getElementById("resultBox").innerText = "Please enter valid numbers.";
+                return;
+            }
+
+            const baseAccuracy = 42;
+            const baseRingPerMPH = 0.489;
+            const accFactor = acc / baseAccuracy;
+            const windFactor = windMultiplier(wind);
+            const elevationFactor = 1 + elevation / 100;
+
+            const maxYard = clubMaxYardage[club];
+            let ringsFromMax = (maxYard - yardage) / 2.0;
+            if (ringsFromMax < 0) ringsFromMax = 0;
+            if (ringsFromMax > 30) ringsFromMax = 30;
+
+            const distanceFactor = 1 - (ringsFromMax / 30);
+            const ringAdjustment = baseRingPerMPH * accFactor * wind * windFactor * elevationFactor * distanceFactor;
+
+            document.getElementById("resultBox").innerText = "Ring Adjustment: " + ringAdjustment.toFixed(3) + " rings";
+        }
+    </script>
+</body>
+</html>
